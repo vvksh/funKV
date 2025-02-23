@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+const (
+	BTREE_DB     = "btree"
+	IN_MEMORY_DB = "in-memory"
+	ALL          = "all"
+)
+
 func stressTest(db KVStore, numOps, numWokers int) {
 	var wg sync.WaitGroup
 	start := time.Now()
@@ -57,22 +63,35 @@ func main() {
 	// Define CLI flags for workers and operations
 	numWorkersFlag := flag.Int("workers", 10, "Number of concurrent workers")
 	numOpsFlag := flag.Int("ops", 100, "Number of operations per worker")
-	storageType := flag.String("storage", "btree", "Storage type: btree or lsm")
+	storageTypeFlag := flag.String("storage", "btree", "Storage type: btree, in-memory or all")
 
-	dbs := map[string]KVStore{}
-	btreeDB, err := NewBoltBTreeKV()
-	if err != nil {
-		log.Fatal(fmt.Errorf("failed to create boltbtree db: %s", err))
-	}
-	dbs["btree"] = btreeDB
+	flag.Parse()
 
 	numWorkers := *numWorkersFlag
 	numOps := *numOpsFlag
 
-	dbToTest := dbs[*storageType]
-	if dbToTest == nil {
-		log.Fatalf("invalid storage type: %s", *storageType)
+	storageType := *storageTypeFlag
+
+	if (storageType != BTREE_DB) && (storageType != IN_MEMORY_DB) && (storageType != ALL) {
+		log.Fatalf("Invalid storage type: %s", storageType)
 	}
-	log.Printf("running stress test for %s with %d workers, %d ops", *storageType, numWorkers, numOps)
-	stressTest(dbToTest, numOps, numWorkers)
+
+	dbs := map[string]KVStore{}
+
+	if storageType == ALL || storageType == BTREE_DB {
+		btreeDB, err := NewBoltBTreeKV()
+		if err != nil {
+			log.Fatal(fmt.Errorf("failed to create boltbtree db: %s", err))
+		}
+		dbs[BTREE_DB] = btreeDB
+	}
+
+	if storageType == "all" || storageType == IN_MEMORY_DB {
+		inMemoryDB := NewInMemoryKV()
+		dbs[IN_MEMORY_DB] = inMemoryDB
+	}
+	for dbType, dbToTest := range dbs {
+		log.Printf("running stress test for %s with %d workers, %d ops", dbType, numWorkers, numOps)
+		stressTest(dbToTest, numOps, numWorkers)
+	}
 }
