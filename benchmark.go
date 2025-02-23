@@ -55,7 +55,7 @@ func stressTest(db KVStore, numOps, numWokers int) {
 	}
 	wg.Wait()
 	elapsed := time.Since(start)
-	fmt.Printf("ops: %d, workers: %d, elapsed: %s\n", numOps*numWokers, numWokers, elapsed)
+	fmt.Printf("numOps: %d, numWorkers: %d, timeElapsed: %s\n", numOps*numWokers, numWokers, elapsed)
 }
 
 func main() {

@@ -30,3 +30,7 @@ func (i *InMemoryKV) Delete(key string) error {
 	delete(i.data, key)
 	return nil
 }
+
+func (i *InMemoryKV) Close() error {
+	return nil
+}

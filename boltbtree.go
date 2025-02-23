@@ -67,3 +67,7 @@ func (b *BoltBTreeKV) Delete(key string) error {
 	})
 	return err
 }
+
+func (b *BoltBTreeKV) Close() error {
+	return b.db.Close()
+}
